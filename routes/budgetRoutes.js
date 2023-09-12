@@ -5,4 +5,4 @@ export const router = express.Router()
 
 
 router.route('/').post(protect, createBudget).get(protect, getMyBudget)
- router.route('/:id').get(protect, getMyBudget).post(protect, updateBudget).delete(protect, deleteBudget)
+router.route('/:id').get(protect, getMyBudget).post(protect, updateBudget).delete(protect, deleteBudget)
