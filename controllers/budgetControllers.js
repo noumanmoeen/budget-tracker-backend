@@ -113,7 +113,6 @@ export const deleteBudget = asyncHandler(async (req, res) => {
 
 export const getBudgetbyId = asyncHandler(async (req, res) => {
   const { id } = req.params;
-
   if (!id) {
     res.status(400);
     throw new Error('Please enter id for budget');
