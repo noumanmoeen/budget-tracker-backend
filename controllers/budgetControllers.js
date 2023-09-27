@@ -1,7 +1,6 @@
 import Budget from '../models/budgetModel.js';
 import asyncHandler from 'express-async-handler';
 import moment from 'moment';
-import { v4 as uuidv4 } from 'uuid';
 import lodash from 'lodash';
 
 export const createBudget = asyncHandler(async (req, res) => {
