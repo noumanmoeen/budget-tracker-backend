@@ -17,6 +17,19 @@ const userSchema = mongoose.Schema(
       required: true,
       unique: true,
     },
+    accountNumber: {
+      type: Number,
+      required: true,
+      unique: true,
+    },
+    savingGoals: {
+      type: Map,
+      required: true,
+     },
+    bankName: {
+      type: String,
+      required: true,
+    },
     password: {
       type: String,
       required: true,

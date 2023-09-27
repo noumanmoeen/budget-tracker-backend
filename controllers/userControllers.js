@@ -1,29 +1,39 @@
-import asyncHandler from "express-async-handler";
-import User from "../models/userModel.js";
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
-import Budget from "../models/budgetModel.js";
-import moment from "moment";
-import Expense from "../models/expenseModel.js";
+import asyncHandler from 'express-async-handler';
+import User from '../models/userModel.js';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+import Budget from '../models/budgetModel.js';
+import moment from 'moment';
+import Expense from '../models/expenseModel.js';
 
 export const registerUser = asyncHandler(async (req, res) => {
-  const { name, email, password, phoneNumber } = req.body;
+  const {
+    name,
+    email,
+    password,
+    phoneNumber,
+    bankName,
+    accountNumber,
+    savingaGoals = {
+      monthly: 0,
+      yearly: 0,
+    },
+  } = req.body;
 
   if (!name || !email || !password || !phoneNumber) {
     res.status(400);
-    throw new Error("Please add all fields");
+    throw new Error('Please add all fields');
   }
 
   const userExists = await User.findOne({ email });
 
   if (userExists) {
     res.status(400);
-    throw new Error("User already exists");
+    throw new Error('User already exists');
   }
 
   const salt = await bcrypt.genSalt(10);
   const hashedPassword = await bcrypt.hash(password, salt);
-  console.log(hashedPassword , password)
   const user = await User.create({
     name,
     email,
@@ -41,7 +51,7 @@ export const registerUser = asyncHandler(async (req, res) => {
     });
   } else {
     res.status(400);
-    throw new Error("Invalid user data");
+    throw new Error('Invalid user data');
   }
 });
 
@@ -50,14 +60,14 @@ export const loginUser = asyncHandler(async (req, res) => {
 
   if (!email || !password) {
     res.status(400);
-    throw new Error("Please add all fields");
+    throw new Error('Please add all fields');
   }
 
   const user = await User.findOne({ email });
 
   if (!user) {
     res.status(400);
-    throw new Error("User does not exists");
+    throw new Error('User does not exists');
   }
 
   if (user && (await bcrypt.compare(password, user.password))) {
@@ -71,7 +81,7 @@ export const loginUser = asyncHandler(async (req, res) => {
     });
   } else {
     res.status(400);
-    throw new Error("Incorrect Password");
+    throw new Error('Incorrect Password');
   }
 });
 
@@ -91,19 +101,19 @@ export const updateUser = asyncHandler(async (req, res) => {
 
   if (!userId) {
     res.status(400);
-    throw new Error("No user id");
+    throw new Error('No user id');
   }
 
   const user = await User.findById({ id: userId });
 
   if (!user) {
     res.status(401);
-    throw new Error("No user");
+    throw new Error('No user');
   }
 
   const updatedUser = await User.findByIdAndUpdate(req.user.id, userData, {
     new: true,
-  }).select(["-password", "-__v"]);
+  }).select(['-password', '-__v']);
 
   res.json({
     user: updatedUser,
@@ -112,25 +122,25 @@ export const updateUser = asyncHandler(async (req, res) => {
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: "30d",
+    expiresIn: '30d',
   });
 };
 
 const checkAndReNewBudget = async (userId) => {
   try {
     const userBudgets = await Budget.find({ user: userId })
-      .populate("expenses")
-      .select(["-createdAt", "-updatedAt", "-__v"]);
+      .populate('expenses')
+      .select(['-createdAt', '-updatedAt', '-__v']);
 
     userBudgets.map(async (budget) => {
       const todaysDate = moment();
       const endDate = moment(budget.endDate);
-      const nextEndDate = todaysDate.clone().add(1, "months");
+      const nextEndDate = todaysDate.clone().add(1, 'months');
 
-      const remainingDays = todaysDate.diff(endDate, "d");
+      const remainingDays = todaysDate.diff(endDate, 'd');
       if (remainingDays === 0 || true) {
         let filteredExpenses = budget.expenses.filter(
-          ({ expenseType }) => expenseType !== "MONTHLY"
+          ({ expenseType }) => expenseType !== 'MONTHLY'
         );
         filteredExpenses = filteredExpenses.map(
           ({ title, amount, paid, expenseType }) => {
@@ -155,12 +165,12 @@ const checkAndReNewBudget = async (userId) => {
           (acc, curr) => curr.amount + acc,
           0
         );
-          
-         await Budget.findByIdAndUpdate(
+
+        await Budget.findByIdAndUpdate(
           { _id: budget._id },
           {
             monthlySavings: budget.monthlyBudget - temp,
-            active : false
+            active: false,
           },
           { new: true }
         );
@@ -176,7 +186,7 @@ const checkAndReNewBudget = async (userId) => {
             filteredExpenses = docs;
           })
           .catch((e) => {
-            throw new Error("Eror");
+            throw new Error('Eror');
           });
         await Budget.findByIdAndUpdate(
           { _id: createdBudget._id },
