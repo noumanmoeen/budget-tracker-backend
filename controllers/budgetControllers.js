@@ -38,11 +38,9 @@ export const createBudget = asyncHandler(async (req, res) => {
   }
 });
 
-
-
-
 export const getMyBudget = asyncHandler(async (req, res) => {
   const budgets = await Budget.find({ user: req.user.id })
+    .sort({ active: -1 })
     .populate(['user', 'expenses'])
     .select(['-createdAt', '-updatedAt', '-__v']);
 
