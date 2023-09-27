@@ -39,6 +39,9 @@ export const registerUser = asyncHandler(async (req, res) => {
     email,
     password: hashedPassword,
     phoneNumber,
+    bankName,
+    savingaGoals,
+    accountNumber
   });
 
   if (user) {
