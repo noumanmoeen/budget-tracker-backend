@@ -174,6 +174,7 @@ const checkAndReNewBudget = async (userId) => {
           {
             monthlySavings: budget.monthlyBudget - temp,
             active: false,
+            archived : true
           },
           { new: true }
         );
