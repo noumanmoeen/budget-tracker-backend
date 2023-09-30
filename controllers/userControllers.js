@@ -22,7 +22,7 @@ export const registerUser = asyncHandler(async (req, res) => {
 
   if (!name || !email || !password || !phoneNumber) {
     res.status(400);
-    throw new Error('Please add all fields');
+    throw new Error('Please add all fields ');
   }
 
   const userExists = await User.findOne({ email });
