@@ -179,6 +179,30 @@ export const getExpensesByTime = asyncHandler(async (req, res) => {
 export const getExpensesByCategory = asyncHandler(async (req, res) => {
   let {} = req.body;
   try {
+    const expensesMap = {};
+    const budgets = await Budget.find({
+      user: req.user.id,
+      $or: [{ archived: true }, { active: true }],
+    }).populate('expenses');
+    budgets.forEach((budget) => {
+      let budgetMonthNum = moment(budget.startDate).month();
+      let budgetMonth = getMonthName(budgetMonthNum);
+      let temp = budget.expenses.reduce(
+        (acc, curr) => curr.amount + acc,
+        0
+      );
+      budget.expenses.forEach((expense) => {
+      expensesMap[expense.expenseType] = {
+        name : expense.title,
+        amount : expense.amount
+      }
+      })
+      expensesMap[budgetMonth] = {
+        expenseAmount: temp,
+        name: budget.name,
+      };
+    });
+
   } catch (err) {
     res.status(500);
     throw new Error(err.message);
