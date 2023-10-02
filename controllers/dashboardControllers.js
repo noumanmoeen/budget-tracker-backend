@@ -57,7 +57,8 @@ export const getTopExpenses = asyncHandler(async (req, res) => {
       budgets.forEach((budget) => {
         let budgetMonthNum = moment(budget.startDate).month();
         let budgetMonth = getMonthName(budgetMonthNum);
-        const expenses = budget.expenses.sort((a, b) => (b.amount = a.amount));
+        let expenses = budget.expenses.sort((a, b) => (b.amount = a.amount));
+        // expenses = expenses.splice(4,5)
         expensesMap[budgetMonth] = {
           amount: expenses[0].amount,
           name: expenses[0].name,
@@ -96,14 +97,16 @@ export const getSavingsByTime = asyncHandler(async (req, res) => {
         break;
       case QUERY_TYPE.YEARLY:
         budgets.forEach((budget) => {
-          let budgetMonthNum = moment(budget.startDate).year();
-          budgetsMap[budgetMonthNum] = {
-            savings: budget.amount,
-            name: budget.name,
-          };
+          let budgetYearNum = moment(budget.startDate).year();
+          if (Boolean(budgetsMap[budgetYearNum])) {
+            budgetsMap[budgetYearNum] =  budgetsMap[budgetYearNum].savings + budget.amount
+          } else {
+            budgetsMap[budgetYearNum] = {
+              savings: budget.amount,
+            };
+          }
         });
         break;
-
       default:
         break;
     }
@@ -119,8 +122,54 @@ export const getSavingsByTime = asyncHandler(async (req, res) => {
 });
 
 export const getExpensesByTime = asyncHandler(async (req, res) => {
-  let {} = req.body;
+  let { type } = req.query;
   try {
+    const expensesMap = {};
+    const budgets = await Budget.find({
+      user: req.user.id,
+      $or: [{ archived: true }, { active: true }],
+    }).populate('expenses');
+
+    switch (type) {
+      case QUERY_TYPE.MONTHLY:
+        budgets.forEach((budget) => {
+          let budgetMonthNum = moment(budget.startDate).month();
+          let budgetMonth = getMonthName(budgetMonthNum);
+          let temp = budget.expenses.reduce(
+            (acc, curr) => curr.amount + acc,
+            0
+          );
+          expensesMap[budgetMonth] = {
+            expenseAmount: temp,
+            name: budget.name,
+          };
+        });
+        break;
+      case QUERY_TYPE.YEARLY:
+        budgets.forEach((budget) => {
+          let budgetYearNum = moment(budget.startDate).year();
+          let temp = budget.expenses.reduce(
+            (acc, curr) => curr.amount + acc,
+            0
+          );
+          if (Boolean(expensesMap[budgetYearNum])) {
+            expensesMap[budgetYearNum] =  expensesMap[budgetYearNum].savings + temp
+          } else {
+            expensesMap[budgetYearNum] = {
+              savings: budget.amount,
+            };
+          }
+        });
+        break;
+
+      default:
+        break;
+    }
+
+    res.status(200);
+    res.json({
+      expenses: expensesMap,
+    });
   } catch (err) {
     res.status(500);
     throw new Error(err.message);
