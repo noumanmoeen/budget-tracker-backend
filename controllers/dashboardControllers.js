@@ -2,6 +2,8 @@ import asyncHandler from 'express-async-handler';
 import Budget from '../models/budgetModel';
 import User from '../models/userModel';
 import Expense from '../models/expenseModel';
+import moment from 'moment';
+import { getMonthName } from '../utils/constants';
 
 export const getAccountDetails = asyncHandler(async (req, res) => {
   let {} = req.body;
@@ -45,13 +47,26 @@ export const getUpcomingPayments = asyncHandler(async (req, res) => {
 export const getTopExpenses = asyncHandler(async (req, res) => {
   let {} = req.body;
   try {
-    {
-      $or: [{ name: 'foobar1' }, { active: true }];
-    }
+    const expensesMap = {};
     const budgets = await Budget.find({
       user: req.user.id,
       $or: [{ archived: true }, { active: true }],
     }).populate(['expenses']);
+
+    if (budgets.length > 0) {
+      budgets.forEach((budget) => {
+        let budgetMonthNum = moment(budget.startDate).month();
+        let budgetMonth = getMonthName(budgetMonthNum);
+        const expenses = budget.expenses.sort((a, b) => (b.amount = a.amount));
+        expensesMap[budgetMonth] = {
+          amount: expenses[0].amount,
+          name: expenses[0].name,
+        };
+      });
+    }
+    res.json({
+      expenses: expensesMap,
+    });
   } catch (err) {
     res.status(500);
     throw new Error(err.message);
