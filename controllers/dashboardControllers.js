@@ -76,6 +76,25 @@ export const getTopExpenses = asyncHandler(async (req, res) => {
 export const getSavingsByTime = asyncHandler(async (req, res) => {
   let {} = req.body;
   try {
+    const budgetsMap = {};
+    const budgets = await Budget.find({
+      user: req.user.id,
+      $or: [{ archived: true }, { active: true }],
+    }).sort({ amount: -1 });
+
+    budgets.forEach((budget) => {
+      let budgetMonthNum = moment(budget.startDate).month();
+      let budgetMonth = getMonthName(budgetMonthNum);
+
+      budgetsMap[budgetMonth] = {
+        savings: budget.amount,
+        name: budget.name,
+      };
+    });
+    res.status(200);
+    res.json({
+      budgets: budgetsMap,
+    });
   } catch (err) {
     res.status(500);
     throw new Error(err.message);
