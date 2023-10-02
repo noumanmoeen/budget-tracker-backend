@@ -3,7 +3,7 @@ import Budget from '../models/budgetModel';
 import User from '../models/userModel';
 import Expense from '../models/expenseModel';
 import moment from 'moment';
-import { getMonthName } from '../utils/constants';
+import { QUERY_TYPE, getMonthName } from '../utils/constants';
 
 export const getAccountDetails = asyncHandler(async (req, res) => {
   let {} = req.body;
@@ -74,7 +74,7 @@ export const getTopExpenses = asyncHandler(async (req, res) => {
 });
 
 export const getSavingsByTime = asyncHandler(async (req, res) => {
-  let {} = req.body;
+  let { type } = req.query;
   try {
     const budgetsMap = {};
     const budgets = await Budget.find({
@@ -82,15 +82,32 @@ export const getSavingsByTime = asyncHandler(async (req, res) => {
       $or: [{ archived: true }, { active: true }],
     }).sort({ amount: -1 });
 
-    budgets.forEach((budget) => {
-      let budgetMonthNum = moment(budget.startDate).month();
-      let budgetMonth = getMonthName(budgetMonthNum);
+    switch (type) {
+      case QUERY_TYPE.MONTHLY:
+        budgets.forEach((budget) => {
+          let budgetMonthNum = moment(budget.startDate).month();
+          let budgetMonth = getMonthName(budgetMonthNum);
 
-      budgetsMap[budgetMonth] = {
-        savings: budget.amount,
-        name: budget.name,
-      };
-    });
+          budgetsMap[budgetMonth] = {
+            savings: budget.amount,
+            name: budget.name,
+          };
+        });
+        break;
+      case QUERY_TYPE.YEARLY:
+        budgets.forEach((budget) => {
+          let budgetMonthNum = moment(budget.startDate).year();
+          budgetsMap[budgetMonthNum] = {
+            savings: budget.amount,
+            name: budget.name,
+          };
+        });
+        break;
+
+      default:
+        break;
+    }
+
     res.status(200);
     res.json({
       budgets: budgetsMap,
