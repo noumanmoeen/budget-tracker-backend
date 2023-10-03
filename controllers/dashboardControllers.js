@@ -99,7 +99,8 @@ export const getSavingsByTime = asyncHandler(async (req, res) => {
         budgets.forEach((budget) => {
           let budgetYearNum = moment(budget.startDate).year();
           if (Boolean(budgetsMap[budgetYearNum])) {
-            budgetsMap[budgetYearNum] =  budgetsMap[budgetYearNum].savings + budget.amount
+            budgetsMap[budgetYearNum] =
+              budgetsMap[budgetYearNum].savings + budget.amount;
           } else {
             budgetsMap[budgetYearNum] = {
               savings: budget.amount,
@@ -153,7 +154,8 @@ export const getExpensesByTime = asyncHandler(async (req, res) => {
             0
           );
           if (Boolean(expensesMap[budgetYearNum])) {
-            expensesMap[budgetYearNum] =  expensesMap[budgetYearNum].savings + temp
+            expensesMap[budgetYearNum] =
+              expensesMap[budgetYearNum].savings + temp;
           } else {
             expensesMap[budgetYearNum] = {
               savings: budget.amount,
@@ -187,22 +189,23 @@ export const getExpensesByCategory = asyncHandler(async (req, res) => {
     budgets.forEach((budget) => {
       let budgetMonthNum = moment(budget.startDate).month();
       let budgetMonth = getMonthName(budgetMonthNum);
-      let temp = budget.expenses.reduce(
-        (acc, curr) => curr.amount + acc,
-        0
-      );
+      let temp = budget.expenses.reduce((acc, curr) => curr.amount + acc, 0);
       budget.expenses.forEach((expense) => {
-      expensesMap[expense.expenseType] = {
-        name : expense.title,
-        amount : expense.amount
-      }
-      })
+        if (expensesMap[expense.expenseType]) {
+          expensesMap[expense.expenseType] = {
+            amount: expensesMap[expense.expenseType].amount + expense.amount,
+          };
+        } else {
+          expensesMap[expense.expenseType] = {
+            amount: expense.amount,
+          };
+        }
+      });
       expensesMap[budgetMonth] = {
         expenseAmount: temp,
         name: budget.name,
       };
     });
-
   } catch (err) {
     res.status(500);
     throw new Error(err.message);
