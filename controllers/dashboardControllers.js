@@ -131,6 +131,7 @@ export const getExpensesByTime = asyncHandler(async (req, res) => {
       $or: [{ archived: true }, { active: true }],
     }).populate('expenses');
 
+    
     switch (type) {
       case QUERY_TYPE.MONTHLY:
         budgets.forEach((budget) => {
